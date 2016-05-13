@@ -84,6 +84,8 @@ def _on_round_start(event):
 def _on_player_disconnect(event):
     """Save player's balance."""
     index = index_from_userid(event['userid'])
+    if index not in players:
+        return
     player = players[index]
     with _database as db:
         db.save_balance(player.steamid, player.balance)
