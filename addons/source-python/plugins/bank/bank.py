@@ -60,6 +60,14 @@ def _withdraw_command(command, player_index, team_only=None):
     players[player_index].withdraw(amount)
 
 
+@Event('round_start')
+def _on_round_start(event):
+    """Save players' balance."""
+    with _database as db:
+        for player in players.values():
+            db.save_balance(player.steamid, player.balance)
+
+
 @Event('player_disconnect')
 def _on_player_disconnect(event):
     """Save player's balance."""
