@@ -2,7 +2,7 @@ from commands.client import ClientCommand
 from commands.say import SayCommand
 from events import Event
 from paths import PLUGIN_DATA_PATH
-from players import PlayerDictionary
+from players.dictionary import PlayerDictionary
 from players.helpers import index_from_userid
 from players.helpers import playerinfo_from_index
 
