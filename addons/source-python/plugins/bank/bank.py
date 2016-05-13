@@ -1,3 +1,5 @@
+from commands.client import ClientCommand
+from commands.say import SayCommand
 from paths import PLUGIN_DATA_PATH
 from players import PlayerDictionary
 from players.helpers import playerinfo_from_index
@@ -28,3 +30,29 @@ def _init_player(index):
     if balance is None:
         balance = 0
     return Player(index, balance=balance)
+
+
+@ClientCommand('deposit')
+@SayCommand('deposit')
+def _deposit_command(command, player_index, team_only=None):
+    """Callback for player's deposit command."""
+    if len(command) != 2:
+        return
+    try:
+        amount = int(command[1])
+    except ValueError:
+        return
+    players[player_index].deposit(amount)
+
+
+@ClientCommand('withdraw')
+@SayCommand('withdraw')
+def _withdraw_command(command, player_index, team_only=None):
+    """Callback for player's withdraw command."""
+    if len(command) != 2:
+        return
+    try:
+        amount = int(command[1])
+    except ValueError:
+        return
+    players[player_index].withdraw(amount)
