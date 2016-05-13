@@ -10,6 +10,7 @@ from translations.strings import LangStrings
 
 from bank.database import Database
 from bank.player import Player
+from bank.utils import KeyDefaultDict
 
 # Globals
 _database = None
@@ -21,7 +22,8 @@ def load():
     """Open the database and create player dictionary."""
     global _database, _messages, players
     _database = Database(PLUGIN_DATA_PATH / 'bank.sql')
-    _messages = {key: SayText2(value) for key, value in LangStrings('bank').items()}
+    lang_strings = LangStrings('bank')
+    _messages = KeyDefaultDict(lambda key: SayText2(lang_strings[key]))
     players = PlayerDictionary(_init_player)
 
 
