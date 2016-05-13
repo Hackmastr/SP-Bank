@@ -16,6 +16,7 @@ players = None
 
 def load():
     """Open the database and create player dictionary."""
+    global _database, players
     _database = Database(PLUGIN_DATA_PATH / 'bank.sql')
     players = PlayerDictionary(_init_player)
 
