@@ -1,6 +1,7 @@
 from commands.client import ClientCommand
 from commands.say import SayCommand
 from events import Event
+from messages import SayText2
 from paths import PLUGIN_DATA_PATH
 from players.dictionary import PlayerDictionary
 from players.helpers import index_from_userid
@@ -33,6 +34,16 @@ def _init_player(index):
     if balance is None:
         balance = 0
     return Player(index, balance=balance)
+
+
+@ClientCommand('balance')
+@SayCommand('balance')
+def _deposit_command(command, player_index, team_only=None):
+    """Callback for player's check balance command."""
+    if len(command) != 1:
+        return
+    player = players[player_index]
+    SayText2('Your balance: {0}'.format(player.balance)).send(player_index)
 
 
 @ClientCommand('deposit')
