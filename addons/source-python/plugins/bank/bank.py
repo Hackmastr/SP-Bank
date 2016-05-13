@@ -6,19 +6,22 @@ from paths import PLUGIN_DATA_PATH
 from players.dictionary import PlayerDictionary
 from players.helpers import index_from_userid
 from players.helpers import playerinfo_from_index
+from translations.strings import LangStrings
 
 from bank.database import Database
 from bank.player import Player
 
 # Globals
 _database = None
+_messages = None
 players = None
 
 
 def load():
     """Open the database and create player dictionary."""
-    global _database, players
+    global _database, _messages, players
     _database = Database(PLUGIN_DATA_PATH / 'bank.sql')
+    _messages = {key: SayText2(value) for key, value in LangStrings('bank').items()}
     players = PlayerDictionary(_init_player)
 
 
@@ -31,7 +34,9 @@ def _init_player(index):
     """Initialize a bank player from an index."""
     steamid = playerinfo_from_index(index).steamid
     balance = _database.load_balance(steamid)
-    if balance is None:
+    if balance is not None:
+        _messages['Welcome Back'].send(index, balance=balance)
+    else:
         balance = 0
     return Player(index, balance=balance)
 
@@ -43,7 +48,7 @@ def _deposit_command(command, player_index, team_only=None):
     if len(command) != 1:
         return
     player = players[player_index]
-    SayText2('Your balance: {0}'.format(player.balance)).send(player_index)
+    _messages['View Balance'].send(player_index, balance=player.balance)
 
 
 @ClientCommand('deposit')
@@ -55,8 +60,11 @@ def _deposit_command(command, player_index, team_only=None):
     try:
         amount = int(command[1])
     except ValueError:
-        return
-    players[player_index].deposit(amount)
+        _messages['Deposit Failure'].send(player_index, value=command[1])
+    else:
+        player = players[player_index]
+        player.deposit(amount)
+        _messages['Deposit Success'].send(player_index, amount=amount, balance=player.balance)
 
 
 @ClientCommand('withdraw')
@@ -68,8 +76,11 @@ def _withdraw_command(command, player_index, team_only=None):
     try:
         amount = int(command[1])
     except ValueError:
-        return
-    players[player_index].withdraw(amount)
+        _messages['Withdraw Failure'].send(player_index, value=command[1])
+    else:
+        player = players[player_index]
+        player.withdraw(amount)
+        _messages['Withdraw Success'].send(player_index, amount=amount, balance=player.balance)
 
 
 @Event('round_start')
