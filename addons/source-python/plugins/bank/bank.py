@@ -1,7 +1,9 @@
 from commands.client import ClientCommand
 from commands.say import SayCommand
+from events import Event
 from paths import PLUGIN_DATA_PATH
 from players import PlayerDictionary
+from players.helpers import index_from_userid
 from players.helpers import playerinfo_from_index
 
 from bank.database import Database
@@ -56,3 +58,13 @@ def _withdraw_command(command, player_index, team_only=None):
     except ValueError:
         return
     players[player_index].withdraw(amount)
+
+
+@Event('player_disconnect')
+def _on_player_disconnect(event):
+    """Save player's balance."""
+    index = index_from_userid(event['userid'])
+    player = players[index]
+    with _database as db:
+        db.save_balance(player.steamid, player.balance)
+    del players[index]
