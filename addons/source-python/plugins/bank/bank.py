@@ -11,25 +11,20 @@ from translations.strings import LangStrings
 from bank.database import Database
 from bank.player import Player
 from bank.utils import KeyDefaultDict
-
-# Globals
-_database = None
-_messages = None
-players = None
+import bank._globals as _globals
 
 
 def load():
-    """Open the database and create player dictionary."""
-    global _database, _messages, players
-    _database = Database(PLUGIN_DATA_PATH / 'bank.sql')
-    lang_strings = LangStrings('bank')
-    _messages = KeyDefaultDict(lambda key: SayText2(lang_strings[key]))
-    players = PlayerDictionary(_init_player)
+    """Initialize the variables in `_globals.py` on plugin load."""
+    _globals.database = Database(PLUGIN_DATA_PATH / 'bank.sql')
+    _globals.lang_strings = LangStrings('bank')
+    _globals.messages = KeyDefaultDict(lambda key: SayText2(lang_strings[key]))
+    _globals.players = PlayerDictionary(_init_player)
 
 
 def unload():
-    """Close the database."""
-    _database.close()
+    """Close the database on plugin unload."""
+    _globals.database.close()
 
 
 def _init_player(index):
@@ -47,7 +42,7 @@ def _deposit_command(command, player_index, team_only=None):
     """Callback for player's check balance command."""
     if len(command) != 1:
         return
-    player = players[player_index]
+    player = _globals.players[player_index]
     _messages['View Balance'].send(player_index, balance=player.balance)
 
 
@@ -62,7 +57,7 @@ def _deposit_command(command, player_index, team_only=None):
     except ValueError:
         _messages['Deposit Failure'].send(player_index, value=command[1])
     else:
-        player = players[player_index]
+        player = _globals.players[player_index]
         player.deposit(amount)
         _messages['Deposit Success'].send(player_index, amount=amount, balance=player.balance)
 
@@ -78,7 +73,7 @@ def _withdraw_command(command, player_index, team_only=None):
     except ValueError:
         _messages['Withdraw Failure'].send(player_index, value=command[1])
     else:
-        player = players[player_index]
+        player = _globals.players[player_index]
         player.withdraw(amount)
         _messages['Withdraw Success'].send(player_index, amount=amount, balance=player.balance)
 
@@ -86,8 +81,8 @@ def _withdraw_command(command, player_index, team_only=None):
 @Event('round_start')
 def _on_round_start(event):
     """Save players' balance."""
-    with _database as db:
-        for player in players.values():
+    with _globals.database as db:
+        for player in _globals.players.values():
             db.save_balance(player.steamid, player.balance)
 
 
@@ -95,9 +90,9 @@ def _on_round_start(event):
 def _on_player_disconnect(event):
     """Save player's balance."""
     index = index_from_userid(event['userid'])
-    if index not in players:
+    if index not in _globals.players:
         return
-    player = players[index]
-    with _database as db:
+    player = _globals.players[index]
+    with _globals.database as db:
         db.save_balance(player.steamid, player.balance)
-    del players[index]
+    del _globals.players[index]
