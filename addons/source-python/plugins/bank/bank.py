@@ -36,9 +36,7 @@ def _init_player(index):
     """Initialize a bank player from an index."""
     steamid = playerinfo_from_index(index).steamid
     balance = _database.load_balance(steamid)
-    if balance is not None:
-        _messages['Welcome Back'].send(index, balance=balance)
-    else:
+    if balance is None:
         balance = 0
     return Player(index, balance=balance)
 
